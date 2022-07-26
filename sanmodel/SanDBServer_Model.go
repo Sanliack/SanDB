@@ -59,7 +59,7 @@ func NewSanDBServerModel(name string, address string) *SanDBServerModel {
 		Listen:    listen,
 		ConnNO:    0,
 		ConnNums:  0,
-		Version:   "SanDB_V0.1",
+		Version:   "SanDB_V0.3",
 		StringMap: make(map[string]interface{}, 24),
 	}
 }
