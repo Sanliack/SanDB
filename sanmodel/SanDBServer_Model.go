@@ -27,6 +27,7 @@ func (s *SanDBServerModel) Start() {
 		newconn := NewConnModel(conn, s.ConnNO)
 		s.ConnNO++
 		go newconn.Start()
+		fmt.Println("SanDB Server Accept Conn Request TCP ADDR:", conn.RemoteAddr())
 	}
 }
 
@@ -41,17 +42,6 @@ func (s *SanDBServerModel) Server() {
 }
 
 // ====================================String====================================
-func (s *SanDBServerModel) StringSet() {
-
-}
-
-func (s *SanDBServerModel) StringGet() {
-
-}
-
-func (s *SanDBServerModel) StringGetSet() {
-
-}
 
 func NewSanDBServerModel(name string, address string) *SanDBServerModel {
 	listenaddr, err := net.ResolveTCPAddr("tcp", address)
