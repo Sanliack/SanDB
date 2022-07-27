@@ -38,7 +38,6 @@ func (s *SanDBServerModel) Stop() {
 func (s *SanDBServerModel) Server() {
 	defer s.Stop()
 	s.Start()
-
 }
 
 // ====================================String====================================

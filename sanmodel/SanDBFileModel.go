@@ -4,6 +4,7 @@ import (
 	"SanDB/conf"
 	"SanDB/sanface"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -31,10 +32,17 @@ func (s *SanDBFileModel) Write(entry sanface.EntryFace) error {
 	return nil
 }
 
+func (s *SanDBFileModel) GetFile() *os.File {
+	return s.File
+}
+
 func (s *SanDBFileModel) Read(offset int64) (sanface.EntryFace, error) {
 	buf := make([]byte, conf.ConfigObj.EntryHeaderSize)
 	_, err := s.File.ReadAt(buf, offset)
-	if err != nil {
+	if err != nil && err == io.EOF {
+		fmt.Println("[Info] SanDBFile Read EOF And Exit:", err)
+		return nil, err
+	} else if err != nil {
 		fmt.Println("[Error] SanDB Read File error:", err)
 		return nil, err
 	}
@@ -67,18 +75,10 @@ func (s *SanDBFileModel) Read(offset int64) (sanface.EntryFace, error) {
 	return entry, nil
 }
 
-//待修复 打开文件不是文件夹
 func NewSanDBFileModel(fileaddr string) (sanface.SanDBFileFace, error) {
 	file, err := os.OpenFile(fileaddr, os.O_CREATE|os.O_RDWR, 0644)
-	//if !os.IsExist(err) {
-	//	file, err = os.Create(fileaddr)
-	//	if err != nil {
-	//		fmt.Println("[Error] NewSanDBFileModel intent to Create file dir: "+fileaddr+", appear error:", err)
-	//		return nil, err
-	//	}
-	//}
 	if err != nil {
-		fmt.Println("[Error] NewSanDBFileModel user Func <os.OpenFile> appear error:", err)
+		fmt.Println("[Error] NewSanDBFileModel-NewSanDBFileModel user Func <os.OpenFile> appear error:", err)
 		return nil, err
 	}
 	stat, err := os.Stat(fileaddr)

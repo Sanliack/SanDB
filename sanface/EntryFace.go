@@ -10,4 +10,5 @@ type EntryFace interface {
 	GetMask() uint16
 	SetKey(key []byte)
 	SetVal(key []byte)
+	SetMark(uint16)
 }

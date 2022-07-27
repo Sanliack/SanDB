@@ -51,9 +51,13 @@ func (e *EntryModel) GetValSize() uint32 {
 	return e.ValSize
 }
 
+func (e *EntryModel) SetMark(mark uint16) {
+	e.Mark = mark
+}
+
 func (e *EntryModel) Encode() ([]byte, error) {
 	buf := make([]byte, e.GetSize())
-	binary.BigEndian.PutUint32(buf[:4], e.keySize)
+	binary.BigEndian.PutUint32(buf[0:4], e.keySize)
 	binary.BigEndian.PutUint32(buf[4:8], e.ValSize)
 	binary.BigEndian.PutUint16(buf[8:10], e.Mark)
 	copy(buf[conf.ConfigObj.EntryHeaderSize:conf.ConfigObj.EntryHeaderSize+int(e.keySize)], e.Key)

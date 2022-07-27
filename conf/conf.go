@@ -6,16 +6,18 @@ import (
 )
 
 type config struct {
-	SanDBFilePath   string
-	EntryHeaderSize int
+	SanDBFilePath      string
+	EntryHeaderSize    int
+	SanDBFileMergePath string
 }
 
 var ConfigObj *config
 
 func init() {
 	ConfigObj = &config{
-		SanDBFilePath:   "/SanDBFile/Conn/",
-		EntryHeaderSize: 10,
+		SanDBFilePath:      "/SanDBFile/SanDBFile.data",
+		EntryHeaderSize:    10,
+		SanDBFileMergePath: "/SanDBFile/SanDBFile.merge.data",
 	}
 	reload()
 }
@@ -29,6 +31,7 @@ func reload() {
 	}
 	connconf := conf.Section("Conn")
 	ConfigObj.SanDBFilePath = connconf.Key("FilePath").String()
+	ConfigObj.SanDBFileMergePath = connconf.Key("FileMergePath").String()
 
 	entryconf := conf.Section("Entry")
 	ConfigObj.EntryHeaderSize, err = entryconf.Key("entryHeaderSize").Int()
