@@ -1,22 +1,22 @@
 package sanmodel
 
 import (
+	"SanDB/sanface"
 	"fmt"
 	"net"
 	"sync"
 )
 
-type SanDBServerModel struct {
-	Name      string
-	ConnNO    int
-	ConnNums  int
-	Version   string
-	Listen    *net.TCPListener
-	StringMap map[string]interface{}
-	DBRWLock  sync.RWMutex
+type ServerModel struct {
+	Name     string
+	ConnNO   int
+	ConnNums int
+	Version  string
+	Listen   *net.TCPListener
+	DBRWLock sync.RWMutex
 }
 
-func (s *SanDBServerModel) Start() {
+func (s *ServerModel) Start() {
 	fmt.Printf("SanDB Server:%s Version:%s 启动成功,开始监听:%s\n", s.Name, s.Version, s.Listen.Addr().String())
 	for {
 		conn, err := s.Listen.AcceptTCP()
@@ -31,18 +31,26 @@ func (s *SanDBServerModel) Start() {
 	}
 }
 
-func (s *SanDBServerModel) Stop() {
+func (s *ServerModel) Stop() {
 
 }
 
-func (s *SanDBServerModel) Server() {
+func (s *ServerModel) Server() {
 	defer s.Stop()
 	s.Start()
 }
 
+func (s *ServerModel) GetVersion() string {
+	return s.Version
+}
+
+func (s *ServerModel) GetConnNums() int {
+	return s.ConnNums
+}
+
 // ====================================String====================================
 
-func NewSanDBServerModel(name string, address string) *SanDBServerModel {
+func NewServerModel(name string, address string) sanface.Server {
 	listenaddr, err := net.ResolveTCPAddr("tcp", address)
 	if err != nil {
 		fmt.Println("服务器获取TCPADDR Error:", err)
@@ -53,12 +61,11 @@ func NewSanDBServerModel(name string, address string) *SanDBServerModel {
 		fmt.Println("服务器获取Listen Error:", err)
 		return nil
 	}
-	return &SanDBServerModel{
-		Name:      name,
-		Listen:    listen,
-		ConnNO:    0,
-		ConnNums:  0,
-		Version:   "SanDB_V0.3",
-		StringMap: make(map[string]interface{}, 24),
+	return &ServerModel{
+		Name:     name,
+		Listen:   listen,
+		ConnNO:   0,
+		ConnNums: 0,
+		Version:  "SanDB_V0.3",
 	}
 }

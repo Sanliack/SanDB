@@ -18,7 +18,10 @@ const (
 	Put uint16 = iota
 	Del
 	Get
-	Msg
+	Nil
+	Syn
+	Err
+	Suc
 )
 
 func (e *EntryModel) GetSize() int64 {

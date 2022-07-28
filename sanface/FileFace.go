@@ -2,7 +2,7 @@ package sanface
 
 import "os"
 
-type SanDBFileFace interface {
+type FileFace interface {
 	Read(int64) (EntryFace, error)
 	GetOffset() int64
 	GetFile() *os.File

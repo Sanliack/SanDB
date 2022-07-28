@@ -8,16 +8,16 @@ import (
 	"os"
 )
 
-type SanDBFileModel struct {
+type FileModel struct {
 	File   *os.File
 	Offset int64
 }
 
-func (s *SanDBFileModel) GetOffset() int64 {
+func (s *FileModel) GetOffset() int64 {
 	return s.Offset
 }
 
-func (s *SanDBFileModel) Write(entry sanface.EntryFace) error {
+func (s *FileModel) Write(entry sanface.EntryFace) error {
 	buf, err := entry.Encode()
 	if err != nil {
 		fmt.Println("[Error] SanDB File Model user Func <entry.Encode> appear error:", err)
@@ -32,11 +32,11 @@ func (s *SanDBFileModel) Write(entry sanface.EntryFace) error {
 	return nil
 }
 
-func (s *SanDBFileModel) GetFile() *os.File {
+func (s *FileModel) GetFile() *os.File {
 	return s.File
 }
 
-func (s *SanDBFileModel) Read(offset int64) (sanface.EntryFace, error) {
+func (s *FileModel) Read(offset int64) (sanface.EntryFace, error) {
 	buf := make([]byte, conf.ConfigObj.EntryHeaderSize)
 	_, err := s.File.ReadAt(buf, offset)
 	if err != nil && err == io.EOF {
@@ -75,7 +75,7 @@ func (s *SanDBFileModel) Read(offset int64) (sanface.EntryFace, error) {
 	return entry, nil
 }
 
-func NewSanDBFileModel(fileaddr string) (sanface.SanDBFileFace, error) {
+func NewSanDBFileModel(fileaddr string) (sanface.FileFace, error) {
 	file, err := os.OpenFile(fileaddr, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Println("[Error] NewSanDBFileModel-NewSanDBFileModel user Func <os.OpenFile> appear error:", err)
@@ -86,7 +86,7 @@ func NewSanDBFileModel(fileaddr string) (sanface.SanDBFileFace, error) {
 		fmt.Println("[Error] NewSanDBFileModel os.Stat appear error:", err)
 		return nil, err
 	}
-	return &SanDBFileModel{
+	return &FileModel{
 		file,
 		stat.Size(),
 	}, nil

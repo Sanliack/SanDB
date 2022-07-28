@@ -15,7 +15,7 @@ import (
 type ConnModel struct {
 	Conn      *net.TCPConn
 	Cid       int
-	SanDBFile sanface.SanDBFileFace
+	SanDBFile sanface.FileFace
 	IndexMap  map[string]int64
 	ConnLock  sync.RWMutex
 }
@@ -24,12 +24,6 @@ func (c *ConnModel) Start() {
 	defer c.Stop()
 	c.InitMap()
 	c.Listen()
-	//err := c.Put([]byte("testKey1"), []byte("Val1"))
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-	//kk, _ := c.Get([]byte("testKey1"))
-	//fmt.Println(string(kk))
 }
 
 func (c *ConnModel) Stop() {
@@ -52,13 +46,12 @@ func (c *ConnModel) Listen() {
 				return
 			}
 		}
-		// 这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这
 		trandata := DecodeTranData(buf[:n])
 		err = c.SolveTranData(trandata)
 		if err != nil {
 			return
 		}
-		fmt.Println("成功添加一条消息")
+		fmt.Println("成功处理一条请求:", string(trandata.GetData()))
 	}
 }
 
@@ -66,10 +59,27 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 	command := trandata.GetCommId()
 	switch command {
 	case Get:
+		key := trandata.GetData()
+		val, err := c.Get(key)
+		remsg := NewTranDataModel(val, Suc)
+		buf, err := remsg.Encode()
+		if err != nil {
+			fmt.Println("[Error] pack Remsg Error：", err)
+			_ = c.SendErrMsg()
+			return err
+		}
+		_, err = c.Conn.Write(buf)
+		if err != nil {
+			fmt.Println("[Error] Conn Write Error：", err)
+			_ = c.SendErrMsg()
+			return err
+		}
+		return nil
 	case Put:
 		keyandval := strings.Split(string(trandata.GetData()), " ")
 		if len(keyandval) != 2 {
 			fmt.Println("[info] Accept Message syntax Error,pass")
+			_ = c.SendSyntaxMsg()
 			return errors.New("message syntax Error")
 		}
 		key := keyandval[0]
@@ -77,11 +87,65 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 		err := c.Put([]byte(key), []byte(val))
 		if err != nil {
 			fmt.Println("[Warning] Conn Slove TranData user Func <conn.Put> appear Error:", err)
+			_ = c.SendErrMsg()
 			return err
 		}
+		_ = c.SendSucessMsg()
 		return nil
 	case Del:
+		key := trandata.GetData()
+		err := c.Del(key)
+		if err != nil {
+			fmt.Println("[Warning] Conn Slove TranData user Func <conn.Del> appear Error:", err)
+			_ = c.SendErrMsg()
+			return err
+		}
+		_ = c.SendSucessMsg()
+		return nil
+	}
+	return nil
+}
 
+func (c *ConnModel) SendSyntaxMsg() error {
+	errmsg := NewTranDataModel(nil, Syn)
+	buf, _ := errmsg.Encode()
+	_, err := c.Conn.Write(buf)
+	if err != nil {
+		fmt.Println("[Error] SendErrmsg Error:", err)
+		return err
+	}
+	return nil
+}
+
+func (c *ConnModel) SendSucessMsg() error {
+	errmsg := NewTranDataModel(nil, Suc)
+	buf, _ := errmsg.Encode()
+	_, err := c.Conn.Write(buf)
+	if err != nil {
+		fmt.Println("[Error] SendErrmsg Error:", err)
+		return err
+	}
+	return nil
+}
+
+func (c *ConnModel) SendErrMsg() error {
+	errmsg := NewTranDataModel(nil, Err)
+	buf, _ := errmsg.Encode()
+	_, err := c.Conn.Write(buf)
+	if err != nil {
+		fmt.Println("[Error] SendErrmsg Error:", err)
+		return err
+	}
+	return nil
+}
+
+func (c *ConnModel) SendNilMsg() error {
+	errmsg := NewTranDataModel(nil, Nil)
+	buf, _ := errmsg.Encode()
+	_, err := c.Conn.Write(buf)
+	if err != nil {
+		fmt.Println("[Error] SendErrmsg Error:", err)
+		return err
 	}
 	return nil
 }
@@ -90,7 +154,7 @@ func (c *ConnModel) GetIndexMap() map[string]int64 {
 	return c.IndexMap
 }
 
-func (c *ConnModel) GetSanDBFile() sanface.SanDBFileFace {
+func (c *ConnModel) GetSanDBFile() sanface.FileFace {
 	return c.SanDBFile
 }
 
@@ -117,7 +181,8 @@ func (c *ConnModel) Get(key []byte) ([]byte, error) {
 	defer c.ConnLock.RUnlock()
 	offset, ok := c.IndexMap[string(key)]
 	if !ok {
-		return nil, nil
+		fmt.Println("[Info] key no exist")
+		return nil, errors.New("key no exist")
 	}
 	entry, err := c.SanDBFile.Read(offset)
 	if err != nil && err != io.EOF {
@@ -162,7 +227,7 @@ func (c *ConnModel) MergeFile() error {
 		offset += entry.GetSize()
 	}
 
-	var newfile sanface.SanDBFileFace
+	var newfile sanface.FileFace
 	var err error
 
 	if len(newEntrys) > 0 {
@@ -227,7 +292,7 @@ func (c *ConnModel) InitMap() {
 	fmt.Printf("Conn%d init Map sucess len of IndexMap:%d IndexMap KV:%v \n", c.Cid, len(c.IndexMap), c.IndexMap)
 }
 
-func NewConnModel(conn *net.TCPConn, cid int) *ConnModel {
+func NewConnModel(conn *net.TCPConn, cid int) sanface.ConnFace {
 	sdfile, err := NewSanDBFileModel(conf.ConfigObj.SanDBFilePath)
 	if err != nil {
 		fmt.Println("[Error] Conn User func <NewSanDBFileModel> appear error", err)
