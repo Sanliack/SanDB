@@ -1,8 +1,11 @@
 package main
 
-import "SanDB/sanmodel"
+import (
+	"SanDB/conf"
+	"SanDB/sanmodel"
+)
 
 func main() {
-	server := sanmodel.NewSanDBServerModel("SANLIACK", "127.0.0.1:3665")
+	server := sanmodel.NewSanDBServerModel("SanDB V0.4 Server ", conf.ConfigObj.Ip+conf.ConfigObj.Port)
 	server.Server()
 }

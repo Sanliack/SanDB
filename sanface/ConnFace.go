@@ -8,4 +8,6 @@ type ConnFace interface {
 	Get([]byte) ([]byte, error)
 	Del([]byte) error
 	MergeFile() error
+	Listen()
+	Stop()
 }

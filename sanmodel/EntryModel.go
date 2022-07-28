@@ -17,6 +17,8 @@ type EntryModel struct {
 const (
 	Put uint16 = iota
 	Del
+	Get
+	Msg
 )
 
 func (e *EntryModel) GetSize() int64 {
@@ -65,7 +67,7 @@ func (e *EntryModel) Encode() ([]byte, error) {
 	return buf, nil
 }
 
-func Decode(buf []byte) (sanface.EntryFace, error) {
+func DecodeEntry(buf []byte) (sanface.EntryFace, error) {
 	newentry := &EntryModel{}
 	newentry.keySize = binary.BigEndian.Uint32(buf[:4])
 	newentry.ValSize = binary.BigEndian.Uint32(buf[4:8])

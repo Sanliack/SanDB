@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -20,14 +21,69 @@ type ConnModel struct {
 }
 
 func (c *ConnModel) Start() {
+	defer c.Stop()
 	c.InitMap()
+	c.Listen()
 	//err := c.Put([]byte("testKey1"), []byte("Val1"))
 	//if err != nil {
 	//	fmt.Println(err)
 	//}
-	kk, _ := c.Get([]byte("testKey1"))
-	fmt.Println(string(kk))
-	select {}
+	//kk, _ := c.Get([]byte("testKey1"))
+	//fmt.Println(string(kk))
+}
+
+func (c *ConnModel) Stop() {
+	err := c.Conn.Close()
+	if err != nil {
+		fmt.Println("[Warning] ConnModel try to close C.Conn appear error:", err)
+	}
+}
+
+func (c *ConnModel) Listen() {
+	for {
+		buf := make([]byte, 4068)
+		n, err := c.Conn.Read(buf)
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println("[Info] Remote User close the Connect:", err)
+				break
+			} else {
+				fmt.Println("[Warning] c.Conn Read buf from remote appear error:", err)
+				return
+			}
+		}
+		// 这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这
+		trandata := DecodeTranData(buf[:n])
+		err = c.SolveTranData(trandata)
+		if err != nil {
+			return
+		}
+		fmt.Println("成功添加一条消息")
+	}
+}
+
+func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
+	command := trandata.GetCommId()
+	switch command {
+	case Get:
+	case Put:
+		keyandval := strings.Split(string(trandata.GetData()), " ")
+		if len(keyandval) != 2 {
+			fmt.Println("[info] Accept Message syntax Error,pass")
+			return errors.New("message syntax Error")
+		}
+		key := keyandval[0]
+		val := keyandval[1]
+		err := c.Put([]byte(key), []byte(val))
+		if err != nil {
+			fmt.Println("[Warning] Conn Slove TranData user Func <conn.Put> appear Error:", err)
+			return err
+		}
+		return nil
+	case Del:
+
+	}
+	return nil
 }
 
 func (c *ConnModel) GetIndexMap() map[string]int64 {

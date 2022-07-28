@@ -46,7 +46,7 @@ func (s *SanDBFileModel) Read(offset int64) (sanface.EntryFace, error) {
 		fmt.Println("[Error] SanDB Read File error:", err)
 		return nil, err
 	}
-	entry, err := Decode(buf)
+	entry, err := DecodeEntry(buf)
 	if err != nil {
 		fmt.Println("[Error] SanDB use func <Decode> error", err)
 		return nil, err

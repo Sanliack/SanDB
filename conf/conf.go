@@ -9,6 +9,8 @@ type config struct {
 	SanDBFilePath      string
 	EntryHeaderSize    int
 	SanDBFileMergePath string
+	Ip                 string
+	Port               string
 }
 
 var ConfigObj *config
@@ -18,6 +20,8 @@ func init() {
 		SanDBFilePath:      "/SanDBFile/SanDBFile.data",
 		EntryHeaderSize:    10,
 		SanDBFileMergePath: "/SanDBFile/SanDBFile.merge.data",
+		Ip:                 "127.0.0.1",
+		Port:               "33366",
 	}
 	reload()
 }
@@ -39,6 +43,10 @@ func reload() {
 		fmt.Println("[Warning] read conf.ini: Entry-entryHeaderSize appear error", err)
 		flag = 1
 	}
+
+	serverconf := conf.Section("Server")
+	ConfigObj.Ip = serverconf.Key("ip").String()
+	ConfigObj.Port = serverconf.Key("port").String()
 
 	if flag == 0 {
 		fmt.Println("SanDB Read Config file success...")
