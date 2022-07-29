@@ -74,6 +74,34 @@ func (s *FileModel) Read(offset int64) (sanface.EntryFace, error) {
 	}
 	return entry, nil
 }
+func (s *FileModel) Clean() error {
+	filename := s.File.Name()
+	err := s.File.Close()
+	if err != nil {
+		fmt.Println("[Error] Close old DataFile appear Error", err)
+		return err
+	}
+
+	err = os.Remove(filename)
+	if err != nil {
+		fmt.Println("[Error] Remove old DataFile appear Error", err)
+		return err
+	}
+
+	newfile, err := os.Create(filename)
+	if err != nil {
+		fmt.Println("[Error] Create old DataFile appear Error", err)
+		return err
+	}
+
+	s.File = newfile
+	s.Offset = 0
+	if err != nil {
+		fmt.Println("[Error] NewSanDBFileModel try to overwrite FileData Appear error:", err)
+		return err
+	}
+	return nil
+}
 
 func NewSanDBFileModel(fileaddr string) (sanface.FileFace, error) {
 	file, err := os.OpenFile(fileaddr, os.O_CREATE|os.O_RDWR, 0644)

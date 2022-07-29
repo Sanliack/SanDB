@@ -7,4 +7,5 @@ type FileFace interface {
 	GetOffset() int64
 	GetFile() *os.File
 	Write(EntryFace) error
+	Clean() error
 }

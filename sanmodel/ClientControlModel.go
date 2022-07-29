@@ -87,8 +87,27 @@ func (c *ClientControlModel) Del(key []byte) error {
 	}
 }
 
-func (c *ClientControlModel) Clear() error {
-	return nil
+func (c *ClientControlModel) Clean() error {
+	trandata := NewTranDataModel(nil, Cle)
+	buf, _ := trandata.Encode()
+	_, err := c.Conn.Write(buf)
+	if err != nil {
+		fmt.Println("[Error] write []byte To Server error: ", err)
+		return err
+	}
+	remsg := make([]byte, 2048)
+	n, err := c.Conn.Read(remsg)
+	if err != nil {
+		fmt.Println("[Error] Client Get Read ReMessage Appear error:", err)
+		return err
+	}
+	remsgtrandata := DecodeTranData(remsg[:n])
+	if remsgtrandata.GetCommId() == Suc {
+		return nil
+	} else {
+		fmt.Println("[Warning] Get Accept Command ID no is msg")
+		return errors.New("accept Command ID no is msg")
+	}
 }
 
 func NewClientContolModel(conn *net.TCPConn) sanface.ClientControlFace {

@@ -19,9 +19,10 @@ const (
 	Del
 	Get
 	Nil
-	Syn
+	Syn // syntax拼写错误
 	Err
 	Suc
+	Cle //clear
 )
 
 func (e *EntryModel) GetSize() int64 {

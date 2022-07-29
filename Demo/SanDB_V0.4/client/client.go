@@ -16,16 +16,38 @@ func main() {
 	}
 
 	// ===============Put=====================
-	//for i := 115; i < 150; i++ {
-	//	err = control.Put([]byte(fmt.Sprintf("key%d", i)), []byte(fmt.Sprintf("Val%d", i)))
-	//	if err != nil {
-	//		fmt.Println("eereeer", err)
-	//		return
-	//	}
-	//}
+	for i := 0; i < 50; i++ {
+		err = control.Put([]byte(fmt.Sprintf("key%d", i)), []byte(fmt.Sprintf("Val%d", i)))
+		if err != nil {
+			fmt.Println("eereeer", err)
+			return
+		}
+	}
+	fmt.Println(1)
 
 	//===============Get=====================
-	for i := 0; i < 150; i++ {
+	for i := 0; i < 50; i++ {
+		key := fmt.Sprintf("key%d", i)
+		val, err := control.Get([]byte(key))
+		if err != nil {
+			fmt.Println("Get Error")
+			return
+		}
+		fmt.Printf("Get KV==%s:%s\n", key, string(val))
+	}
+	fmt.Println(2)
+
+	// ===============Del=====================
+	for i := 20; i < 40; i++ {
+		key := fmt.Sprintf("key%d", i)
+		err := control.Del([]byte(key))
+		if err != nil {
+			fmt.Println()
+		}
+	}
+	fmt.Println(3)
+
+	for i := 0; i < 50; i++ {
 		key := fmt.Sprintf("key%d", i)
 		val, err := control.Get([]byte(key))
 		if err != nil {
@@ -34,16 +56,44 @@ func main() {
 		}
 		fmt.Printf("Get KV==%s:%s\n", key, val)
 	}
+	fmt.Println(4)
 
-	// ===============Del=====================
-	//for i := 50; i < 75; i++ {
-	//	key := fmt.Sprintf("key%d", i)
-	//	err := control.Del([]byte(key))
-	//	if err != nil {
-	//		fmt.Println()
-	//	}
-	//
-	//}
+	// ===============Clear=====================
+	err = control.Clean()
+
+	for i := 0; i < 50; i++ {
+		key := fmt.Sprintf("key%d", i)
+		val, err := control.Get([]byte(key))
+		if err != nil {
+			fmt.Println("Get Error")
+			return
+		}
+		fmt.Printf("Get KV==%s:%s\n", key, val)
+	}
+	fmt.Println(5)
+
+	for i := 0; i < 50; i++ {
+		err = control.Put([]byte(fmt.Sprintf("key%d", i)), []byte(fmt.Sprintf("Val%d", i)))
+		if err != nil {
+			fmt.Println("eereeer", err)
+			return
+		}
+	}
+	fmt.Println(6)
+
+	for i := 0; i < 50; i++ {
+		key := fmt.Sprintf("key%d", i)
+		val, err := control.Get([]byte(key))
+		if err != nil {
+			fmt.Println("Get Error")
+			return
+		}
+		fmt.Printf("Get KV==%s:%s\n", key, val)
+	}
+	fmt.Println(7)
+
+	if err != nil {
+		fmt.Println("clear err", err)
+	}
 	select {}
-
 }

@@ -102,6 +102,15 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 		}
 		_ = c.SendSucessMsg()
 		return nil
+	case Cle:
+		err := c.Clean()
+		if err != nil {
+			fmt.Println("[Warning] Conn Slove TranData user Func <conn.Cle> appear Error:", err)
+			_ = c.SendErrMsg()
+			return err
+		}
+		_ = c.SendSucessMsg()
+		return nil
 	}
 	return nil
 }
@@ -169,7 +178,7 @@ func (c *ConnModel) Put(key []byte, val []byte) error {
 		fmt.Println("[Error] Conn User SanDBFile Func <Write> appear Error", err)
 		return err
 	}
-	c.IndexMap[string(key)] = c.GetSanDBFile().GetOffset()
+	c.IndexMap[string(key)] = c.GetSanDBFile().GetOffset() - entry.GetSize()
 	return nil
 }
 
@@ -186,7 +195,10 @@ func (c *ConnModel) Get(key []byte) ([]byte, error) {
 	}
 	entry, err := c.SanDBFile.Read(offset)
 	if err != nil && err != io.EOF {
+		//fmt.Println("============================")
 		return nil, err
+	} else if err == io.EOF {
+		return nil, nil
 	}
 	return entry.GetVal(), nil
 }
@@ -204,6 +216,17 @@ func (c *ConnModel) Del(key []byte) error {
 		return err
 	}
 	delete(c.IndexMap, string(key))
+	return nil
+}
+
+func (c *ConnModel) Clean() error {
+	c.IndexMap = make(map[string]int64)
+	err := c.SanDBFile.Clean()
+	if err != nil {
+		fmt.Println("[Error] ConnModel Try To Clean fileData appear Error:", err)
+		return err
+	}
+	fmt.Println("clean over ? map:", c.IndexMap)
 	return nil
 }
 
