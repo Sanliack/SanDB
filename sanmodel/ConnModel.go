@@ -111,6 +111,15 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 		}
 		_ = c.SendSucessMsg()
 		return nil
+	case Mer:
+		err := c.MergeFile()
+		if err != nil {
+			fmt.Println("[Error] Server User func <MergerFile> Error:", err)
+			_ = c.SendErrMsg()
+			return err
+		}
+		_ = c.SendSucessMsg()
+		return nil
 	}
 	return nil
 }
@@ -231,12 +240,16 @@ func (c *ConnModel) Clean() error {
 }
 
 func (c *ConnModel) MergeFile() error {
+	if c.SanDBFile.GetOffset() == 0 {
+		return nil
+	}
 	var offset int64
 	var newEntrys []sanface.EntryFace
 	for {
 		entry, err := c.SanDBFile.Read(offset)
 		if err != nil {
 			if err == io.EOF {
+				fmt.Println("[info] ConnModel Read EOF exit ")
 				break
 			} else {
 				fmt.Println("[Error] ConnModel MergeFile user Func <SanDBFile.Read> appear Error", err)
@@ -245,6 +258,7 @@ func (c *ConnModel) MergeFile() error {
 		}
 		off, ok := c.IndexMap[string(entry.GetKey())]
 		if !(!ok || entry.GetMask() == Del || off != offset) {
+			fmt.Println("append:=", string(entry.GetKey())+":"+string(entry.GetVal()), "msgtype :", entry.GetMask(), "off:", off, "offset:", offset)
 			newEntrys = append(newEntrys, entry)
 		}
 		offset += entry.GetSize()
@@ -281,8 +295,13 @@ func (c *ConnModel) MergeFile() error {
 		fmt.Println("[Error] ConnModel Close NewDataFile appear Error:", err)
 		return err
 	}
+	err = os.Remove(olddatafilename)
+	if err != nil {
+		fmt.Println("[Error] ConnModel Merge NewDataFile Remove old file appear Error:", err)
+		return err
+	}
 
-	err = os.Rename(olddatafilename, newfileneme)
+	err = os.Rename(newfileneme, olddatafilename)
 	if err != nil {
 		fmt.Println("[Error] ConnModel Merge NewDataFile Change Name instead OldDataFile appear Error:", err)
 		return err
@@ -305,6 +324,7 @@ func (c *ConnModel) InitMap() {
 		}
 		mask := entry.GetMask()
 		if mask == Del {
+			delete(c.IndexMap, string(entry.GetKey()))
 			offset += entry.GetSize()
 			continue
 		}

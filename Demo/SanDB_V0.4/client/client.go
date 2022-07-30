@@ -16,7 +16,7 @@ func main() {
 	}
 
 	// ===============Put=====================
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 500; i++ {
 		err = control.Put([]byte(fmt.Sprintf("key%d", i)), []byte(fmt.Sprintf("Val%d", i)))
 		if err != nil {
 			fmt.Println("eereeer", err)
@@ -26,7 +26,7 @@ func main() {
 	fmt.Println(1)
 
 	//===============Get=====================
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 500; i++ {
 		key := fmt.Sprintf("key%d", i)
 		val, err := control.Get([]byte(key))
 		if err != nil {
@@ -38,7 +38,7 @@ func main() {
 	fmt.Println(2)
 
 	// ===============Del=====================
-	for i := 20; i < 40; i++ {
+	for i := 200; i < 400; i++ {
 		key := fmt.Sprintf("key%d", i)
 		err := control.Del([]byte(key))
 		if err != nil {
@@ -46,8 +46,7 @@ func main() {
 		}
 	}
 	fmt.Println(3)
-
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 500; i++ {
 		key := fmt.Sprintf("key%d", i)
 		val, err := control.Get([]byte(key))
 		if err != nil {
@@ -61,7 +60,7 @@ func main() {
 	// ===============Clear=====================
 	err = control.Clean()
 
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 500; i++ {
 		key := fmt.Sprintf("key%d", i)
 		val, err := control.Get([]byte(key))
 		if err != nil {
@@ -72,7 +71,7 @@ func main() {
 	}
 	fmt.Println(5)
 
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 500; i++ {
 		err = control.Put([]byte(fmt.Sprintf("key%d", i)), []byte(fmt.Sprintf("Val%d", i)))
 		if err != nil {
 			fmt.Println("eereeer", err)
@@ -80,8 +79,7 @@ func main() {
 		}
 	}
 	fmt.Println(6)
-
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 500; i++ {
 		key := fmt.Sprintf("key%d", i)
 		val, err := control.Get([]byte(key))
 		if err != nil {

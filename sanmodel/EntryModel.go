@@ -23,6 +23,7 @@ const (
 	Err
 	Suc
 	Cle //clear
+	Mer
 )
 
 func (e *EntryModel) GetSize() int64 {
@@ -75,7 +76,7 @@ func DecodeEntry(buf []byte) (sanface.EntryFace, error) {
 	newentry := &EntryModel{}
 	newentry.keySize = binary.BigEndian.Uint32(buf[:4])
 	newentry.ValSize = binary.BigEndian.Uint32(buf[4:8])
-	newentry.Mark = binary.BigEndian.Uint16(buf[6:10])
+	newentry.Mark = binary.BigEndian.Uint16(buf[8:10])
 	return newentry, nil
 }
 

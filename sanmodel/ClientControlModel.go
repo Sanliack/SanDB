@@ -63,6 +63,29 @@ func (c *ClientControlModel) Get(key []byte) ([]byte, error) {
 	}
 }
 
+func (c *ClientControlModel) Merge() error {
+	trandata := NewTranDataModel(nil, Mer)
+	buf, _ := trandata.Encode()
+	_, err := c.Conn.Write(buf)
+	if err != nil {
+		fmt.Println("[Error] write Merge Msg To Server error: ")
+		return err
+	}
+	remsg := make([]byte, 2048)
+	n, err := c.Conn.Read(remsg)
+	if err != nil {
+		fmt.Println("[Error] Client Merge Read ReMessage Appear error:", err)
+		return err
+	}
+	remsgtrandata := DecodeTranData(remsg[:n])
+	if remsgtrandata.GetCommId() == Suc {
+		return nil
+	} else {
+		fmt.Println("[Warning] Mer Accept Command ID no is msg")
+		return errors.New("accept Command ID no is msg")
+	}
+}
+
 func (c *ClientControlModel) Del(key []byte) error {
 	trandata := NewTranDataModel(key, Del)
 	buf, _ := trandata.Encode()
@@ -75,7 +98,7 @@ func (c *ClientControlModel) Del(key []byte) error {
 	remsg := make([]byte, 2048)
 	n, err := c.Conn.Read(remsg)
 	if err != nil {
-		fmt.Println("[Error] Client Get Read ReMessage Appear error:", err)
+		fmt.Println("[Error] Client Del Read ReMessage Appear error:", err)
 		return err
 	}
 	remsgtrandata := DecodeTranData(remsg[:n])

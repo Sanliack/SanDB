@@ -5,4 +5,5 @@ type ClientControlFace interface {
 	Get([]byte) ([]byte, error)
 	Del([]byte) error
 	Clean() error
+	Merge() error
 }

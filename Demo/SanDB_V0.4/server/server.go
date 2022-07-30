@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	SanDB := sanmodel.NewServerModel("SanDB V0.4 Server", conf.ConfigObj.Ip+conf.ConfigObj.Port)
+	SanDB := sanmodel.NewServerModel("SanDB V1.0 Server", conf.ConfigObj.Ip+conf.ConfigObj.Port)
 	SanDB.Server()
 }
