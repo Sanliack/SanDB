@@ -1,28 +1,24 @@
 package sanmodel
 
 import (
-	"SanDB/conf"
 	"SanDB/sanface"
 	"errors"
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"strings"
-	"sync"
 )
 
 type ConnModel struct {
-	Conn      *net.TCPConn
-	Cid       int
-	SanDBFile sanface.FileFace
-	IndexMap  map[string]int64
-	ConnLock  sync.RWMutex
+	Conn        *net.TCPConn
+	Cid         int
+	Server      sanface.Server
+	DataManager sanface.DataManagerFace
 }
 
 func (c *ConnModel) Start() {
 	defer c.Stop()
-	c.InitMap()
+
 	c.Listen()
 }
 
@@ -58,9 +54,20 @@ func (c *ConnModel) Listen() {
 func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 	command := trandata.GetCommId()
 	switch command {
+	case Dat:
+		database := string(trandata.GetData())
+		dm, err := c.Server.GetDataManager(database)
+		if err != nil {
+			fmt.Println("[error] ConnModel Get datamanager error:", err)
+			_ = c.SendErrMsg()
+			return err
+		}
+		c.DataManager = dm
+		_ = c.SendSucessMsg()
+		return nil
 	case Get:
 		key := trandata.GetData()
-		val, err := c.Get(key)
+		val, err := c.DataManager.Get(key)
 		remsg := NewTranDataModel(val, Suc)
 		buf, err := remsg.Encode()
 		if err != nil {
@@ -84,7 +91,7 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 		}
 		key := keyandval[0]
 		val := keyandval[1]
-		err := c.Put([]byte(key), []byte(val))
+		err := c.DataManager.Put([]byte(key), []byte(val))
 		if err != nil {
 			fmt.Println("[Warning] Conn Slove TranData user Func <conn.Put> appear Error:", err)
 			_ = c.SendErrMsg()
@@ -93,8 +100,9 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 		_ = c.SendSucessMsg()
 		return nil
 	case Del:
+
 		key := trandata.GetData()
-		err := c.Del(key)
+		err := c.DataManager.Del(key)
 		if err != nil {
 			fmt.Println("[Warning] Conn Slove TranData user Func <conn.Del> appear Error:", err)
 			_ = c.SendErrMsg()
@@ -103,7 +111,8 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 		_ = c.SendSucessMsg()
 		return nil
 	case Cle:
-		err := c.Clean()
+
+		err := c.DataManager.Clean()
 		if err != nil {
 			fmt.Println("[Warning] Conn Slove TranData user Func <conn.Cle> appear Error:", err)
 			_ = c.SendErrMsg()
@@ -112,7 +121,8 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 		_ = c.SendSucessMsg()
 		return nil
 	case Mer:
-		err := c.MergeFile()
+
+		err := c.DataManager.MergeFile()
 		if err != nil {
 			fmt.Println("[Error] Server User func <MergerFile> Error:", err)
 			_ = c.SendErrMsg()
@@ -168,183 +178,10 @@ func (c *ConnModel) SendNilMsg() error {
 	return nil
 }
 
-func (c *ConnModel) GetIndexMap() map[string]int64 {
-	return c.IndexMap
-}
-
-func (c *ConnModel) GetSanDBFile() sanface.FileFace {
-	return c.SanDBFile
-}
-
-func (c *ConnModel) Put(key []byte, val []byte) error {
-	c.ConnLock.Lock()
-	defer c.ConnLock.Unlock()
-
-	entry := NewEntryModel(key, val, Put)
-
-	err := c.GetSanDBFile().Write(entry)
-	if err != nil {
-		fmt.Println("[Error] Conn User SanDBFile Func <Write> appear Error", err)
-		return err
-	}
-	c.IndexMap[string(key)] = c.GetSanDBFile().GetOffset() - entry.GetSize()
-	return nil
-}
-
-func (c *ConnModel) Get(key []byte) ([]byte, error) {
-	if len(key) == 0 {
-		return nil, errors.New("len of key is 0")
-	}
-	c.ConnLock.RLock()
-	defer c.ConnLock.RUnlock()
-	offset, ok := c.IndexMap[string(key)]
-	if !ok {
-		fmt.Println("[Info] key no exist")
-		return nil, errors.New("key no exist")
-	}
-	entry, err := c.SanDBFile.Read(offset)
-	if err != nil && err != io.EOF {
-		//fmt.Println("============================")
-		return nil, err
-	} else if err == io.EOF {
-		return nil, nil
-	}
-	return entry.GetVal(), nil
-}
-
-func (c *ConnModel) Del(key []byte) error {
-	if len(key) == 0 {
-		return errors.New("len of key is 0")
-	}
-	c.ConnLock.Lock()
-	defer c.ConnLock.Unlock()
-	delentry := NewEntryModel(key, nil, Del)
-	err := c.SanDBFile.Write(delentry)
-	if err != nil {
-		fmt.Println("[Warning] ConnModel use Func <Del> Appear error:", err)
-		return err
-	}
-	delete(c.IndexMap, string(key))
-	return nil
-}
-
-func (c *ConnModel) Clean() error {
-	c.IndexMap = make(map[string]int64)
-	err := c.SanDBFile.Clean()
-	if err != nil {
-		fmt.Println("[Error] ConnModel Try To Clean fileData appear Error:", err)
-		return err
-	}
-	fmt.Println("clean over ? map:", c.IndexMap)
-	return nil
-}
-
-func (c *ConnModel) MergeFile() error {
-	if c.SanDBFile.GetOffset() == 0 {
-		return nil
-	}
-	var offset int64
-	var newEntrys []sanface.EntryFace
-	for {
-		entry, err := c.SanDBFile.Read(offset)
-		if err != nil {
-			if err == io.EOF {
-				fmt.Println("[info] ConnModel Read EOF exit ")
-				break
-			} else {
-				fmt.Println("[Error] ConnModel MergeFile user Func <SanDBFile.Read> appear Error", err)
-				return err
-			}
-		}
-		off, ok := c.IndexMap[string(entry.GetKey())]
-		if !(!ok || entry.GetMask() == Del || off != offset) {
-			fmt.Println("append:=", string(entry.GetKey())+":"+string(entry.GetVal()), "msgtype :", entry.GetMask(), "off:", off, "offset:", offset)
-			newEntrys = append(newEntrys, entry)
-		}
-		offset += entry.GetSize()
-	}
-
-	var newfile sanface.FileFace
-	var err error
-
-	if len(newEntrys) > 0 {
-		newfile, err = NewSanDBFileModel(conf.ConfigObj.SanDBFileMergePath)
-		if err != nil {
-			fmt.Println("[Error] ConnModel-MergeFile user Func <NewSanDBFileModel> appear error:", err)
-			return err
-		}
-		for _, entry := range newEntrys {
-			newoffset := newfile.GetOffset()
-			err = newfile.Write(entry)
-			if err != nil {
-
-			}
-			c.IndexMap[string(entry.GetKey())] = newoffset
-		}
-	}
-	olddatafilename := c.SanDBFile.GetFile().Name()
-	err = c.SanDBFile.GetFile().Close()
-	if err != nil {
-		fmt.Println("[Error] ConnModel Close OldDataFile appear Error:", err)
-		return err
-	}
-
-	newfileneme := newfile.GetFile().Name()
-	err = newfile.GetFile().Close()
-	if err != nil {
-		fmt.Println("[Error] ConnModel Close NewDataFile appear Error:", err)
-		return err
-	}
-	err = os.Remove(olddatafilename)
-	if err != nil {
-		fmt.Println("[Error] ConnModel Merge NewDataFile Remove old file appear Error:", err)
-		return err
-	}
-
-	err = os.Rename(newfileneme, olddatafilename)
-	if err != nil {
-		fmt.Println("[Error] ConnModel Merge NewDataFile Change Name instead OldDataFile appear Error:", err)
-		return err
-	}
-
-	c.SanDBFile = newfile
-	return nil
-}
-
-func (c *ConnModel) InitMap() {
-	var offset int64
-	for {
-		entry, err := c.SanDBFile.Read(offset)
-		if err != nil {
-			//if err == io.EOF {
-			//	break
-			//}
-			fmt.Println("[Warning] Conn init IndexMap appear error", err)
-			break
-		}
-		mask := entry.GetMask()
-		if mask == Del {
-			delete(c.IndexMap, string(entry.GetKey()))
-			offset += entry.GetSize()
-			continue
-		}
-		key := entry.GetKey()
-		c.IndexMap[string(key)] = offset
-		offset += entry.GetSize()
-	}
-	fmt.Printf("Conn%d init Map sucess len of IndexMap:%d IndexMap KV:%v \n", c.Cid, len(c.IndexMap), c.IndexMap)
-}
-
-func NewConnModel(conn *net.TCPConn, cid int) sanface.ConnFace {
-	sdfile, err := NewSanDBFileModel(conf.ConfigObj.SanDBFilePath)
-	if err != nil {
-		fmt.Println("[Error] Conn User func <NewSanDBFileModel> appear error", err)
-		return nil
-	}
+func NewConnModel(conn *net.TCPConn, cid int, server sanface.Server) sanface.ConnFace {
 	return &ConnModel{
-		Conn:      conn,
-		Cid:       cid,
-		IndexMap:  make(map[string]int64),
-		SanDBFile: sdfile,
+		Conn:   conn,
+		Cid:    cid,
+		Server: server,
 	}
 }

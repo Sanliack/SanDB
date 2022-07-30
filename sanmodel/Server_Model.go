@@ -4,16 +4,15 @@ import (
 	"SanDB/sanface"
 	"fmt"
 	"net"
-	"sync"
 )
 
 type ServerModel struct {
-	Name     string
-	ConnNO   int
-	ConnNums int
-	Version  string
-	Listen   *net.TCPListener
-	DBRWLock sync.RWMutex
+	Name           string
+	ConnNO         int
+	ConnNums       int
+	Version        string
+	Listen         *net.TCPListener
+	DataManagerMap map[string]sanface.DataManagerFace
 }
 
 func (s *ServerModel) Start() {
@@ -24,7 +23,7 @@ func (s *ServerModel) Start() {
 			fmt.Println("服务器获取client的Conn Error:", err)
 			continue
 		}
-		newconn := NewConnModel(conn, s.ConnNO)
+		newconn := NewConnModel(conn, s.ConnNO, s)
 		s.ConnNO++
 		go newconn.Start()
 		fmt.Println("SanDB Server Accept Conn Request TCP ADDR:", conn.RemoteAddr())
@@ -48,6 +47,20 @@ func (s *ServerModel) GetConnNums() int {
 	return s.ConnNums
 }
 
+func (s *ServerModel) GetDataManager(database string) (sanface.DataManagerFace, error) {
+	dm, ok := s.DataManagerMap[database]
+	if !ok {
+		newdm, err := NewDataManagerModel(database)
+		if err != nil {
+			fmt.Println("[Error] Server user func <NewDataManagerModel> appear error", err)
+			return nil, err
+		}
+		s.DataManagerMap[database] = newdm
+		return newdm, nil
+	}
+	return dm, nil
+}
+
 // ====================================String====================================
 
 func NewServerModel(name string, address string) sanface.Server {
@@ -62,10 +75,11 @@ func NewServerModel(name string, address string) sanface.Server {
 		return nil
 	}
 	return &ServerModel{
-		Name:     name,
-		Listen:   listen,
-		ConnNO:   0,
-		ConnNums: 0,
-		Version:  "SanDB_V0.3",
+		Name:           name,
+		Listen:         listen,
+		ConnNO:         0,
+		ConnNums:       0,
+		Version:        "SanDB_V1.0",
+		DataManagerMap: make(map[string]sanface.DataManagerFace),
 	}
 }

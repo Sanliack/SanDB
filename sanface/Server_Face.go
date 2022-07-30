@@ -6,4 +6,5 @@ type Server interface {
 	Stop()
 	GetVersion() string
 	GetConnNums() int
+	GetDataManager(string) (DataManagerFace, error)
 }

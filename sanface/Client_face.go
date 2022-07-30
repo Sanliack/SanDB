@@ -4,5 +4,5 @@ type ClientFace interface {
 	Start()
 	Stop()
 	Server()
-	Connect(tcpADdr string) (ClientControlFace, error)
+	Connect(tcpADdr string, database string) (ClientControlFace, error)
 }

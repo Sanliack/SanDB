@@ -24,6 +24,7 @@ const (
 	Suc
 	Cle //clear
 	Mer
+	Dat //database
 )
 
 func (e *EntryModel) GetSize() int64 {
