@@ -100,7 +100,6 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 		_ = c.SendSucessMsg()
 		return nil
 	case Del:
-
 		key := trandata.GetData()
 		err := c.DataManager.Del(key)
 		if err != nil {

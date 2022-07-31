@@ -2,6 +2,7 @@ package main
 
 import (
 	"SanDB/sanmodel"
+	"SanDB/tools"
 	"fmt"
 )
 
@@ -21,10 +22,12 @@ func main() {
 		fmt.Println("2+", err)
 		return
 	}
-
-	//go tools.StartPut(con1, 0, 100)
+	tools.StartPut(con1, 0, 100)
 	//go tools.StartPut(con2, 100, 200)
+	tools.StartDel(con1, 50, 100)
+	//tools.StartMerge(con1)
 	fmt.Println(con1, con2)
+
 	select {}
 
 }

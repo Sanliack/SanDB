@@ -56,7 +56,10 @@ func (d *DataManagerModel) Get(key []byte) ([]byte, error) {
 
 func (d *DataManagerModel) Del(key []byte) error {
 	if len(key) == 0 {
-		return errors.New("len of key is 0")
+		return nil
+	}
+	if _, ok := d.IndexMap[string(key)]; !ok {
+		return nil
 	}
 	d.DMLock.Lock()
 	defer d.DMLock.Unlock()
