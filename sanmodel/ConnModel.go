@@ -2,18 +2,17 @@ package sanmodel
 
 import (
 	"SanDB/sanface"
-	"errors"
 	"fmt"
 	"io"
 	"net"
-	"strings"
 )
 
 type ConnModel struct {
-	Conn        *net.TCPConn
-	Cid         int
-	Server      sanface.Server
-	DataManager sanface.DataManagerFace
+	Conn     *net.TCPConn
+	Cid      int
+	Server   sanface.Server
+	StrRoute sanface.StrRouteFace
+	SetRoute sanface.SetRouteFace
 }
 
 func (c *ConnModel) Start() {
@@ -54,7 +53,7 @@ func (c *ConnModel) Listen() {
 func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 	command := trandata.GetCommId()
 	switch command {
-	case Dat:
+	case Database:
 		database := string(trandata.GetData())
 		dm, err := c.Server.GetDataManager(database)
 		if err != nil {
@@ -62,79 +61,43 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 			_ = c.SendErrMsg()
 			return err
 		}
-		c.DataManager = dm
+		sm, err := NewSetManagerModel(database)
+		c.StrRoute = NewStrRouteModel(c, dm)
+		c.SetRoute = NewSetRouteModel(c, sm)
 		_ = c.SendSucessMsg()
 		return nil
-	case Get:
-		key := trandata.GetData()
-		val, err := c.DataManager.Get(key)
-		remsg := NewTranDataModel(val, Suc)
-		buf, err := remsg.Encode()
-		if err != nil {
-			fmt.Println("[Error] pack Remsg Error：", err)
-			_ = c.SendErrMsg()
-			return err
-		}
-		_, err = c.Conn.Write(buf)
-		if err != nil {
-			fmt.Println("[Error] Conn Write Error：", err)
-			_ = c.SendErrMsg()
-			return err
-		}
-		return nil
-	case Put:
-		keyandval := strings.Split(string(trandata.GetData()), " ")
-		if len(keyandval) != 2 {
-			fmt.Println("[info] Accept Message syntax Error,pass")
-			_ = c.SendSyntaxMsg()
-			return errors.New("message syntax Error")
-		}
-		key := keyandval[0]
-		val := keyandval[1]
-		err := c.DataManager.Put([]byte(key), []byte(val))
-		if err != nil {
-			fmt.Println("[Warning] Conn Slove TranData user Func <conn.Put> appear Error:", err)
-			_ = c.SendErrMsg()
-			return err
-		}
-		_ = c.SendSucessMsg()
-		return nil
-	case Del:
-		key := trandata.GetData()
-		err := c.DataManager.Del(key)
-		if err != nil {
-			fmt.Println("[Warning] Conn Slove TranData user Func <conn.Del> appear Error:", err)
-			_ = c.SendErrMsg()
-			return err
-		}
-		_ = c.SendSucessMsg()
-		return nil
-	case Cle:
-
-		err := c.DataManager.Clean()
-		if err != nil {
-			fmt.Println("[Warning] Conn Slove TranData user Func <conn.Cle> appear Error:", err)
-			_ = c.SendErrMsg()
-			return err
-		}
-		_ = c.SendSucessMsg()
-		return nil
-	case Mer:
-
-		err := c.DataManager.MergeFile()
-		if err != nil {
-			fmt.Println("[Error] Server User func <MergerFile> Error:", err)
-			_ = c.SendErrMsg()
-			return err
-		}
-		_ = c.SendSucessMsg()
-		return nil
+	case Str_Get:
+		return c.StrRoute.Get(trandata)
+	case Str_Put:
+		return c.StrRoute.Put(trandata)
+	case Str_Del:
+		return c.StrRoute.Del(trandata)
+	case Str_Clean:
+		return c.StrRoute.Clean()
+	case Str_Merge:
+		return c.StrRoute.Merge()
+	case Set_Add:
+		return c.SetRoute.Sadd(trandata)
+	case Set_Pop:
+		return c.SetRoute.Spop(trandata)
+	case Set_Card:
+		return c.SetRoute.Scard(trandata)
+	case Set_Member:
+		return c.SetRoute.Smember(trandata)
+	case Set_IsMember:
+		return c.SetRoute.SIsmember(trandata)
+	case Set_DelByKey:
+		return c.SetRoute.DelByKey(trandata)
+	case Set_Merge:
+		return c.SetRoute.MergeFile(trandata)
+	case Set_Clean:
+		return c.SetRoute.Clean()
 	}
 	return nil
 }
 
 func (c *ConnModel) SendSyntaxMsg() error {
-	errmsg := NewTranDataModel(nil, Syn)
+	errmsg := NewTranDataModel(nil, Syntax)
 	buf, _ := errmsg.Encode()
 	_, err := c.Conn.Write(buf)
 	if err != nil {

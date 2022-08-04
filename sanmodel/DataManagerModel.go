@@ -21,7 +21,7 @@ func (d *DataManagerModel) Put(key []byte, val []byte) error {
 	d.DMLock.Lock()
 	defer d.DMLock.Unlock()
 
-	entry := NewEntryModel(key, val, Put)
+	entry := NewEntryModel(key, val, Str_Put)
 	err := d.SanDBFile.Write(entry)
 	if err != nil {
 		fmt.Println("[Error] Conn User SanDBFile Func <Write> appear Error", err)
@@ -63,7 +63,7 @@ func (d *DataManagerModel) Del(key []byte) error {
 	}
 	d.DMLock.Lock()
 	defer d.DMLock.Unlock()
-	delentry := NewEntryModel(key, nil, Del)
+	delentry := NewEntryModel(key, nil, Str_Del)
 	err := d.SanDBFile.Write(delentry)
 	if err != nil {
 		fmt.Println("[Warning] ConnModel use Func <Del> Appear error:", err)
@@ -107,7 +107,7 @@ func (d *DataManagerModel) MergeFile() error {
 			}
 		}
 		off, ok := d.IndexMap[string(entry.GetKey())]
-		if !(!ok || entry.GetMask() == Del || off != offset) {
+		if !(!ok || entry.GetMask() == Str_Del || off != offset) {
 			fmt.Println("append:=", string(entry.GetKey())+":"+string(entry.GetVal()), "msgtype :", entry.GetMask(), "off:", off, "offset:", offset)
 			newEntrys = append(newEntrys, entry)
 		}
@@ -173,7 +173,7 @@ func (d *DataManagerModel) InitMap() {
 			break
 		}
 		mask := entry.GetMask()
-		if mask == Del {
+		if mask == Str_Del {
 			delete(d.IndexMap, string(entry.GetKey()))
 			offset += entry.GetSize()
 			continue
@@ -186,8 +186,8 @@ func (d *DataManagerModel) InitMap() {
 }
 
 func NewDataManagerModel(name string) (sanface.DataManagerFace, error) {
-	fmt.Println("name:=====", conf.ConfigObj.SanDBFilePath+name+".data")
-	filemodel, err := NewSanDBFileModel(conf.ConfigObj.SanDBFilePath + name + ".data")
+	fmt.Println("name:=====", conf.ConfigObj.SanDBFilePath+name+".str.data")
+	filemodel, err := NewSanDBFileModel(conf.ConfigObj.SanDBFilePath + name + ".str.data")
 	if err != nil {
 		fmt.Println("")
 		return nil, err

@@ -20,7 +20,8 @@ func (s *ClientModel) Connect(tcpAddr string, database string) (sanface.ClientCo
 		fmt.Println("client net.DialTCP error", err)
 		return nil, err
 	}
-	buf, err := NewTranDataModel([]byte(database), Dat).Encode()
+
+	buf, err := NewTranDataModel([]byte(database), Database).Encode()
 	if err != nil {
 		fmt.Println("[Error] Connect Pack msg error:", err)
 		return nil, err

@@ -14,19 +14,6 @@ type EntryModel struct {
 	Mark    uint16
 }
 
-const (
-	Put uint16 = iota
-	Del
-	Get
-	Nil
-	Syn // syntax拼写错误
-	Err
-	Suc
-	Cle //clear
-	Mer
-	Dat //database
-)
-
 func (e *EntryModel) GetSize() int64 {
 	return int64(conf.ConfigObj.EntryHeaderSize + int(e.keySize+e.ValSize))
 }
