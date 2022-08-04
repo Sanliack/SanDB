@@ -49,7 +49,6 @@ func (s *SetManagerModel) Scard(key []byte) int {
 func (s *SetManagerModel) Smember(key []byte) ([][]byte, error) {
 	s.DMLock.RLock()
 	defer s.DMLock.RUnlock()
-	//keynum := s.Scard(key)
 	_, ok := s.IndexMap[string(key)]
 	if !ok {
 		fmt.Println("[info] Client Search no exist key")
@@ -76,6 +75,13 @@ func (s *SetManagerModel) Spop(key []byte, val []byte) error {
 	if keynum == 0 {
 		fmt.Println("[info] Client Search no exist key")
 		return nil
+	}
+
+	if s.IndexMap[string(key)] != nil {
+		_, ok := s.IndexMap[string(key)][string(val)]
+		if !ok {
+			return nil
+		}
 	}
 	_, flag := s.IndexMap[string(key)][string(val)]
 	if !flag {

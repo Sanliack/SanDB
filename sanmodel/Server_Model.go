@@ -13,6 +13,7 @@ type ServerModel struct {
 	Version        string
 	Listen         *net.TCPListener
 	DataManagerMap map[string]sanface.DataManagerFace
+	SetManagerMap  map[string]sanface.SetManagerFace
 }
 
 func (s *ServerModel) Start() {
@@ -61,6 +62,20 @@ func (s *ServerModel) GetDataManager(database string) (sanface.DataManagerFace, 
 	return dm, nil
 }
 
+func (s *ServerModel) GetSetManager(database string) (sanface.SetManagerFace, error) {
+	dm, ok := s.SetManagerMap[database]
+	if !ok {
+		newdm, err := NewSetManagerModel(database)
+		if err != nil {
+			fmt.Println("[Error] Server user func <NewDataManagerModel> appear error", err)
+			return nil, err
+		}
+		s.SetManagerMap[database] = newdm
+		return newdm, nil
+	}
+	return dm, nil
+}
+
 // ====================================String====================================
 
 func NewServerModel(name string, address string) sanface.Server {
@@ -81,5 +96,6 @@ func NewServerModel(name string, address string) sanface.Server {
 		ConnNums:       0,
 		Version:        "SanDB_V1.0",
 		DataManagerMap: make(map[string]sanface.DataManagerFace),
+		SetManagerMap:  make(map[string]sanface.SetManagerFace),
 	}
 }

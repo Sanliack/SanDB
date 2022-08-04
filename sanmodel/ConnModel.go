@@ -56,12 +56,18 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 	case Database:
 		database := string(trandata.GetData())
 		dm, err := c.Server.GetDataManager(database)
+
 		if err != nil {
 			fmt.Println("[error] ConnModel Get datamanager error:", err)
 			_ = c.SendErrMsg()
 			return err
 		}
-		sm, err := NewSetManagerModel(database)
+		sm, err := c.Server.GetSetManager(database)
+		if err != nil {
+			fmt.Println("[error] ConnModel Get Setmanager error:", err)
+			_ = c.SendErrMsg()
+			return err
+		}
 		c.StrRoute = NewStrRouteModel(c, dm)
 		c.SetRoute = NewSetRouteModel(c, sm)
 		_ = c.SendSucessMsg()

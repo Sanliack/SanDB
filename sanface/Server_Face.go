@@ -7,4 +7,5 @@ type Server interface {
 	GetVersion() string
 	GetConnNums() int
 	GetDataManager(string) (DataManagerFace, error)
+	GetSetManager(string) (SetManagerFace, error)
 }
