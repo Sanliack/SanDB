@@ -58,8 +58,8 @@ func main() {
 	//
 	//}
 	//select {}
-	//moregoset()
-	moregostr()
+	moregoset()
+	//moregostr()
 	select {}
 }
 
