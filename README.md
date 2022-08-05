@@ -80,4 +80,16 @@ err = control.Set().Sadd([]byte("c1"), []byte("valc1"))
 // 删除所有数据
 ```
 
-## SanDB架构设计
+## SanDB-Server架构设计
+
+![](.\SanDB_Pic.png)
+
+## SanDB存储单元设计
+
+单个存储单元：
+
+![](.\entry.png)
+
+存储文件：
+
+![](.\File.png)

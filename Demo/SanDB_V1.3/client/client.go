@@ -58,18 +58,18 @@ func main() {
 	//
 	//}
 	//select {}
-	moregoset()
+	//moregoset()
 	//moregostr()
 	select {}
 }
 
 func moregoset() {
 	client := sanmodel.NewClientModel()
-	wg := sync.WaitGroup{}
+	wg := new(sync.WaitGroup)
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func(gowg *sync.WaitGroup, i int) {
-			dbname := fmt.Sprintf("db1")
+			dbname := fmt.Sprintf("setTest1")
 			conn, err := client.Connect("127.0.0.1:6666", dbname)
 			if err != nil {
 				fmt.Println("aaaaa", err)
@@ -83,7 +83,7 @@ func moregoset() {
 				}
 			}
 			gowg.Done()
-		}(&wg, i)
+		}(wg, i)
 	}
 	fmt.Println("start", time.Now().Minute(), time.Now().Second())
 	wg.Wait()
