@@ -82,14 +82,14 @@ err = control.Set().Sadd([]byte("c1"), []byte("valc1"))
 
 ## SanDB-Server架构设计
 
-![](.\SanDB_Pic.png)
+![](https://github.com/Sanliack/SanDB/blob/master/SanDB_Pic.png)
 
 ## SanDB存储单元设计
 
 单个存储单元：
 
-![](.\entry.png)
+![](https://github.com/Sanliack/SanDB/blob/master/entry.png)
 
 存储文件：
 
-![](.\File.png)
+![](https://github.com/Sanliack/SanDB/blob/master/File.png)
