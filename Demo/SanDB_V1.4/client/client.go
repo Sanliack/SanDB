@@ -1,6 +1,7 @@
 package main
 
 import (
+	"SanDB/sanface"
 	"SanDB/sanmodel"
 	"fmt"
 	"sync"
@@ -9,58 +10,26 @@ import (
 
 func main() {
 	client := sanmodel.NewClientModel()
-	c1, err := client.Connect("127.0.0.1:6666", "tttt")
+	c1, err := client.Connect("127.0.0.1:6666", "SanDB1.4")
 	if err != nil {
-		fmt.Println("errrrrr")
+		fmt.Println("start client error")
 		return
 	}
-	err = c1.Set().Sadd([]byte("c1"), []byte("valc1"))
-	if err != nil {
-		fmt.Println(err)
-		return
-
-	}
-
-	c2, err := client.Connect("127.0.0.1:6666", "tttt")
-	if err != nil {
-		fmt.Println("errrrrr")
-		return
-	}
-	err = c2.Set().Sadd([]byte("c2"), []byte("valc2"))
-	if err != nil {
-		fmt.Println(err)
-		return
-
-	}
-
-	c3, err := client.Connect("127.0.0.1:6666", "tttt")
-	if err != nil {
-		fmt.Println("errrrrr")
-		return
-	}
-
-	err = c3.Set().Sadd([]byte("c3"), []byte("valc3"))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	c4, err := client.Connect("127.0.0.1:6666", "tttt")
-	if err != nil {
-		fmt.Println("errrrrr")
-		return
-	}
-
-	err = c4.Set().Sadd([]byte("c4"), []byte("valc4"))
-	if err != nil {
-		fmt.Println(err)
-		return
-
-	}
-	//select {}
-	//moregoset()
-	//moregostr()
+	StartSet(50, 100, c1)
 	select {}
+}
+
+func StartSet(i, j int, c sanface.ClientControlFace) {
+	for k := i; k <= j; k++ {
+		key := fmt.Sprintf("key%d", k)
+		val := fmt.Sprintf("val%d", k)
+		err := c.Set().Sadd([]byte(key), []byte(val))
+		if err != nil {
+			fmt.Println("eeeerrrrr")
+			break
+		}
+
+	}
 }
 
 func moregoset() {

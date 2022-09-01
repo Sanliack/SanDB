@@ -11,6 +11,8 @@ type config struct {
 	SanDBFileMergePath string
 	Ip                 string
 	Port               string
+	WorkerPoolSize     int
+	WorkQueueLength    int
 }
 
 var ConfigObj *config
@@ -22,6 +24,8 @@ func init() {
 		SanDBFileMergePath: "/SanDBFile/SanDBFile.merge.data",
 		Ip:                 "127.0.0.1",
 		Port:               "33366",
+		WorkerPoolSize:     100,
+		WorkQueueLength:    1000,
 	}
 	reload()
 }
@@ -47,6 +51,17 @@ func reload() {
 	serverconf := conf.Section("Server")
 	ConfigObj.Ip = serverconf.Key("ip").String()
 	ConfigObj.Port = serverconf.Key("port").String()
+	ConfigObj.WorkerPoolSize, err = serverconf.Key("WorkerPoolSize").Int()
+	if err != nil {
+		fmt.Println("[Warning] read conf.ini: WorkerPoolSize appear error (can't turn it to int)", err)
+		flag = 1
+	}
+	ConfigObj.WorkQueueLength, err = serverconf.Key("WorkQueueLength").Int()
+
+	if err != nil {
+		fmt.Println("[Warning] read conf.ini: WorkQueueLength appear error (can't turn it to int)", err)
+		flag = 1
+	}
 
 	if flag == 0 {
 		fmt.Println("SanDB Read Config file success...")

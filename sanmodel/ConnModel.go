@@ -17,7 +17,6 @@ type ConnModel struct {
 
 func (c *ConnModel) Start() {
 	defer c.Stop()
-
 	c.Listen()
 }
 
@@ -42,11 +41,12 @@ func (c *ConnModel) Listen() {
 			}
 		}
 		trandata := DecodeTranData(buf[:n])
-		err = c.SolveTranData(trandata)
+		td := NewWorkerTranData(c, trandata)
+		c.Server.AddMsgToMsgQueue(td)
+		//err = c.SolveTranData(trandata)
 		if err != nil {
 			return
 		}
-		fmt.Println("成功处理一条请求:", string(trandata.GetData()))
 	}
 }
 

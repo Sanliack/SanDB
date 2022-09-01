@@ -1,6 +1,7 @@
 package sanmodel
 
 import (
+	"SanDB/conf"
 	"SanDB/sanface"
 	"fmt"
 	"net"
@@ -14,9 +15,23 @@ type ServerModel struct {
 	Listen         *net.TCPListener
 	DataManagerMap map[string]sanface.DataManagerFace
 	SetManagerMap  map[string]sanface.SetManagerFace
+	WorkerPool     []sanface.WorkerFace
+	workerCur      int
+	//MsgQueue
+}
+
+func (s *ServerModel) AddMsgToMsgQueue(data sanface.WorkerTranDataFace) {
+	if s.workerCur >= len(s.WorkerPool) {
+		s.workerCur = 0
+	}
+	s.WorkerPool[s.workerCur].AddMsg(data)
+	s.workerCur++
 }
 
 func (s *ServerModel) Start() {
+	for _, v := range s.WorkerPool {
+		go v.Start()
+	}
 	fmt.Printf("SanDB Server:%s Version:%s 启动成功,开始监听:%s\n", s.Name, s.Version, s.Listen.Addr().String())
 	for {
 		conn, err := s.Listen.AcceptTCP()
@@ -89,6 +104,11 @@ func NewServerModel(name string, address string) sanface.Server {
 		fmt.Println("服务器获取Listen Error:", err)
 		return nil
 	}
+	wp := []sanface.WorkerFace{}
+	for i := 0; i < conf.ConfigObj.WorkerPoolSize; i++ {
+		wp = append(wp, NewWorkerModel(i))
+	}
+
 	return &ServerModel{
 		Name:           name,
 		Listen:         listen,
@@ -97,5 +117,7 @@ func NewServerModel(name string, address string) sanface.Server {
 		Version:        "SanDB_V1.0",
 		DataManagerMap: make(map[string]sanface.DataManagerFace),
 		SetManagerMap:  make(map[string]sanface.SetManagerFace),
+		WorkerPool:     wp,
+		workerCur:      0,
 	}
 }

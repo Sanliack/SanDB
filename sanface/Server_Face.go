@@ -8,4 +8,5 @@ type Server interface {
 	GetConnNums() int
 	GetDataManager(string) (DataManagerFace, error)
 	GetSetManager(string) (SetManagerFace, error)
+	AddMsgToMsgQueue(data WorkerTranDataFace)
 }
