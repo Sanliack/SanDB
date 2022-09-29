@@ -38,6 +38,7 @@ func (s *SetControlModel) Sadd(key []byte, val []byte) error {
 		return errors.New("something happen wrong")
 	}
 }
+
 func (s *SetControlModel) Scard(key []byte) (int, error) {
 	td := NewTranDataModel(key, Set_Card)
 	buf, _ := td.Encode()

@@ -13,6 +13,8 @@ type config struct {
 	Port               string
 	WorkerPoolSize     int
 	WorkQueueLength    int
+	MaxCacheNums       int
+	CacheLength        int
 }
 
 var ConfigObj *config
@@ -26,6 +28,8 @@ func init() {
 		Port:               "33366",
 		WorkerPoolSize:     100,
 		WorkQueueLength:    1000,
+		MaxCacheNums:       10,
+		CacheLength:        1000,
 	}
 	reload()
 }
@@ -36,6 +40,7 @@ func reload() {
 	if err != nil {
 		fmt.Println("[Warning] open conf.ini fail", err)
 		flag = 1
+		return
 	}
 	connconf := conf.Section("Conn")
 	ConfigObj.SanDBFilePath = connconf.Key("FilePath").String()
@@ -63,6 +68,17 @@ func reload() {
 		flag = 1
 	}
 
+	cacheconf := conf.Section("Cache")
+	ConfigObj.MaxCacheNums, err = cacheconf.Key("MaxCacheNums").Int()
+	if err != nil {
+		fmt.Println("[Warning] read conf.ini: WorkerPoolSize appear error (can't turn it to int)", err)
+		flag = 1
+	}
+	ConfigObj.CacheLength, err = cacheconf.Key("CacheLength").Int()
+	if err != nil {
+		fmt.Println("[Warning] read conf.ini: WorkerPoolSize appear error (can't turn it to int)", err)
+		flag = 1
+	}
 	if flag == 0 {
 		fmt.Println("SanDB Read Config file success...")
 	}

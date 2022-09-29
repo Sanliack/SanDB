@@ -17,7 +17,7 @@ type ServerModel struct {
 	SetManagerMap  map[string]sanface.SetManagerFace
 	WorkerPool     []sanface.WorkerFace
 	workerCur      int
-	//MsgQueue
+	Cache          sanface.CacheFace
 }
 
 func (s *ServerModel) AddMsgToMsgQueue(data sanface.WorkerTranDataFace) {
@@ -114,10 +114,11 @@ func NewServerModel(name string, address string) sanface.Server {
 		Listen:         listen,
 		ConnNO:         0,
 		ConnNums:       0,
-		Version:        "SanDB_V1.0",
+		Version:        "SanDB_V1.4",
 		DataManagerMap: make(map[string]sanface.DataManagerFace),
 		SetManagerMap:  make(map[string]sanface.SetManagerFace),
 		WorkerPool:     wp,
 		workerCur:      0,
+		Cache:          NewCacheManagerModel(conf.ConfigObj.MaxCacheNums, conf.ConfigObj.CacheLength),
 	}
 }

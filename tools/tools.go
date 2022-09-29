@@ -6,6 +6,13 @@ import (
 	"fmt"
 )
 
+type ListNode struct {
+	Val  []byte
+	Key  string
+	Pre  *ListNode
+	Next *ListNode
+}
+
 func DecodeSetMember(buf []byte) ([][]byte, error) {
 	var members = make([][]byte, 0)
 	tmp := 0

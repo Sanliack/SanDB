@@ -22,6 +22,7 @@ func (s *StrRouteModel) Get(trandata sanface.TranDataFace) error {
 		_ = s.ConnModel.SendErrMsg()
 		return err
 	}
+	// cache===============================
 	_, err = s.ConnModel.Conn.Write(buf)
 	if err != nil {
 		fmt.Println("[Error] Conn Write Error：", err)

@@ -10,7 +10,7 @@ import (
 
 func main() {
 	client := sanmodel.NewClientModel()
-	c1, err := client.Connect("127.0.0.1:6666", "SanDB1.4")
+	c1, err := client.Connect("127.0.0.1:6666", "BefCache")
 	if err != nil {
 		fmt.Println("start client error")
 		return

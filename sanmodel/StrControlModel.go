@@ -94,7 +94,6 @@ func (c *StrControlModel) Del(key []byte) error {
 		fmt.Println("[Error] write []byte To Server error: ", err)
 		return err
 	}
-
 	remsg := make([]byte, 2048)
 	n, err := c.Conn.Read(remsg)
 	if err != nil {
