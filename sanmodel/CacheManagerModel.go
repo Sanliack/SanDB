@@ -29,6 +29,22 @@ func (c *CacheManagerModel) Put(name, k string, v []byte) {
 	onecache.Put(k, v)
 }
 
+func (c *CacheManagerModel) Del(name, key string) {
+	onecache, ok := c.CacheMap[name]
+	if !ok {
+		return
+	}
+	onecache.Del(key)
+}
+
+func (c *CacheManagerModel) Clean(name string) {
+	onecache, ok := c.CacheMap[name]
+	if !ok {
+		return
+	}
+	onecache.Clean()
+}
+
 func (c *CacheManagerModel) Get(name, key string) ([]byte, bool) {
 	if cache, ok := c.CacheMap[name]; ok {
 		return cache.Get(key)

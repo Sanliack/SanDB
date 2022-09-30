@@ -45,6 +45,9 @@ func (s *ServerModel) Start() {
 		fmt.Println("SanDB Server Accept Conn Request TCP ADDR:", conn.RemoteAddr())
 	}
 }
+func (s *ServerModel) GetCacheManager() sanface.CacheFace {
+	return s.Cache
+}
 
 func (s *ServerModel) Stop() {
 

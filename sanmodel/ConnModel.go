@@ -10,6 +10,7 @@ import (
 type ConnModel struct {
 	Conn     *net.TCPConn
 	Cid      int
+	DBname   string
 	Server   sanface.Server
 	StrRoute sanface.StrRouteFace
 	SetRoute sanface.SetRouteFace
@@ -56,7 +57,7 @@ func (c *ConnModel) SolveTranData(trandata sanface.TranDataFace) error {
 	case Database:
 		database := string(trandata.GetData())
 		dm, err := c.Server.GetDataManager(database)
-
+		c.DBname = database
 		if err != nil {
 			fmt.Println("[error] ConnModel Get datamanager error:", err)
 			_ = c.SendErrMsg()

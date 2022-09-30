@@ -12,12 +12,14 @@ type OneCache struct {
 	CacheMap  map[string]*tools.ListNode
 	Head      *tools.ListNode
 	Tail      *tools.ListNode
-	CMLock    sync.RWMutex
+	CMLock    sync.Mutex
 	MaxLength int
 	Length    int
 }
 
 func (o *OneCache) Put(k string, v []byte) {
+	o.CMLock.Lock()
+	defer o.CMLock.Unlock()
 	lnode, ok := o.CacheMap[k]
 	if ok {
 		lnode.Val = v
@@ -39,12 +41,34 @@ func (o *OneCache) Put(k string, v []byte) {
 }
 
 func (o *OneCache) Get(key string) ([]byte, bool) {
+	o.CMLock.Lock()
+	defer o.CMLock.Unlock()
 	data, ok := o.CacheMap[key]
 	if !ok {
 		return nil, false
 	}
 	o.MoveToHead(data)
 	return data.Val, true
+}
+
+func (o *OneCache) Clean() {
+	o.CMLock.Lock()
+	defer o.CMLock.Unlock()
+	o.CacheMap = make(map[string]*tools.ListNode)
+	o.Length = 0
+	o.Head.Next = o.Tail
+	o.Tail.Pre = o.Head
+}
+
+func (o *OneCache) Del(key string) {
+	o.CMLock.Lock()
+	defer o.CMLock.Unlock()
+	node, ok := o.CacheMap[key]
+	if !ok {
+		return
+	}
+	o.RemoveNode(node)
+	o.Length--
 }
 
 func (o *OneCache) TestDebug() {

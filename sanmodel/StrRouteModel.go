@@ -13,8 +13,20 @@ type StrRouteModel struct {
 }
 
 func (s *StrRouteModel) Get(trandata sanface.TranDataFace) error {
+	var err error
 	key := trandata.GetData()
-	val, err := s.DataManager.Get(key)
+
+	// cache...
+	val, ok := s.ConnModel.Server.GetCacheManager().Get(s.ConnModel.DBname, string(key))
+	if !ok {
+		val, err = s.DataManager.Get(key)
+		fmt.Println("=============>>>>>> no Use cache")
+
+	} else {
+		fmt.Println("=============>>>>>> Use cache")
+	}
+	// cache...
+
 	remsg := NewTranDataModel(val, Suc)
 	buf, err := remsg.Encode()
 	if err != nil {
@@ -22,7 +34,6 @@ func (s *StrRouteModel) Get(trandata sanface.TranDataFace) error {
 		_ = s.ConnModel.SendErrMsg()
 		return err
 	}
-	// cache===============================
 	_, err = s.ConnModel.Conn.Write(buf)
 	if err != nil {
 		fmt.Println("[Error] Conn Write Error：", err)
@@ -48,6 +59,11 @@ func (s *StrRouteModel) Put(trandata sanface.TranDataFace) error {
 		return err
 	}
 	_ = s.ConnModel.SendSucessMsg()
+
+	// cache...
+	s.ConnModel.Server.GetCacheManager().Put(s.ConnModel.DBname, key, []byte(val))
+	// cache...
+
 	return nil
 }
 
@@ -60,6 +76,10 @@ func (s *StrRouteModel) Del(trandata sanface.TranDataFace) error {
 		return err
 	}
 	_ = s.ConnModel.SendSucessMsg()
+
+	// cache...
+	s.ConnModel.Server.GetCacheManager().Del(s.ConnModel.DBname, string(key))
+
 	return nil
 }
 
@@ -71,6 +91,9 @@ func (s *StrRouteModel) Clean() error {
 		return err
 	}
 	_ = s.ConnModel.SendSucessMsg()
+
+	// cache
+	s.ConnModel.Server.GetCacheManager().Clean(s.ConnModel.DBname)
 	return nil
 }
 

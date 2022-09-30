@@ -27,6 +27,9 @@ func (s *SetRouteModel) Sadd(trandata sanface.TranDataFace) error {
 		return err
 	}
 	_ = s.ConnModel.SendSucessMsg()
+	//cache
+	s.ConnModel.Server.GetCacheManager().Put(s.ConnModel.DBname, kvlist[0], []byte(kvlist[1]))
+
 	return nil
 }
 func (s *SetRouteModel) Scard(trandata sanface.TranDataFace) error {
@@ -63,6 +66,7 @@ func (s *SetRouteModel) Smember(trandata sanface.TranDataFace) error {
 		return err
 	}
 	// cache===============================
+
 	_, err = s.ConnModel.Conn.Write(buf)
 	if err != nil {
 		fmt.Println("[Error] SetManager scard write into conn error", err)

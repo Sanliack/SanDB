@@ -15,7 +15,22 @@ func main() {
 		fmt.Println("start client error")
 		return
 	}
+	val, err := c1.Str().Get([]byte("key55"))
+	fmt.Println(string(val))
+
 	StartStr(50, 100, c1)
+	//err = c1.Str().Merge()
+	if err != nil {
+		fmt.Println(err)
+	}
+	val, err = c1.Str().Get([]byte("key55"))
+	val, err = c1.Str().Get([]byte("key55"))
+	val, err = c1.Str().Get([]byte("key55"))
+	if err != nil {
+		fmt.Println("error")
+		return
+	}
+	fmt.Println(string(val))
 	select {}
 }
 

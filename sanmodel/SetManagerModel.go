@@ -34,16 +34,17 @@ func (s *SetManagerModel) Sadd(key []byte, val []byte) error {
 	if s.IndexMap[string(key)] == nil {
 		s.IndexMap[string(key)] = make(map[string]int64, 0)
 	}
+
 	s.IndexMap[string(key)][string(val)] = s.SanDBFile.GetOffset() - entry.GetSize()
 	return nil
 }
 
 func (s *SetManagerModel) Scard(key []byte) int {
-	_, ok := s.IndexMap[string(key)]
+	ans, ok := s.IndexMap[string(key)]
 	if !ok {
 		return 0
 	}
-	return len(s.IndexMap[string(key)])
+	return len(ans)
 }
 
 func (s *SetManagerModel) Smember(key []byte) ([][]byte, error) {
