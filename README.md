@@ -1,4 +1,4 @@
-# SanDBV1.3
+# SanDBV1.5
 
 基于TCP实现的一个Key-value数据库（数据可以持久化，保存到本地，需要数据时从文件中读取出指定数据）。
 
@@ -93,3 +93,7 @@ err = control.Set().Sadd([]byte("c1"), []byte("valc1"))
 存储文件：
 
 ![](https://github.com/Sanliack/SanDB/blob/master/File.png)
+
+## 缓存设计
+
+采用LRU(最近最少使用替换策略)根据不同数据类型创建缓存。提高了查询的效率，无需每次都要去读取文件，减少了IO。
