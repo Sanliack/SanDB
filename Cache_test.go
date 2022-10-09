@@ -18,6 +18,7 @@ func TestCache(t *testing.T) {
 	} else {
 		fmt.Println("get null")
 	}
+	//sort.S
 	cachemanager.Put("cname", "key1", []byte("val5"))
 	cachemanager.Put("cname", "key6", []byte("val6"))
 	cachemanager.Put("cname", "key7", []byte("val7"))
