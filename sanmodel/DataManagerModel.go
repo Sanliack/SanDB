@@ -92,7 +92,6 @@ func (d *DataManagerModel) MergeFile() error {
 	}
 	d.DMLock.Lock()
 	defer d.DMLock.Unlock()
-
 	var offset int64
 	var newEntrys []sanface.EntryFace
 	for {

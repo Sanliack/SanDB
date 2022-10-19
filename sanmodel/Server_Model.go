@@ -8,16 +8,17 @@ import (
 )
 
 type ServerModel struct {
-	Name           string
-	ConnNO         int
-	ConnNums       int
-	Version        string
-	Listen         *net.TCPListener
-	DataManagerMap map[string]sanface.DataManagerFace
-	SetManagerMap  map[string]sanface.SetManagerFace
-	WorkerPool     []sanface.WorkerFace
-	workerCur      int
-	Cache          sanface.CacheFace
+	Name             string
+	ConnNO           int
+	ConnNums         int
+	Version          string
+	Listen           *net.TCPListener
+	DataManagerMap   map[string]sanface.DataManagerFace
+	SetManagerMap    map[string]sanface.SetManagerFace
+	WorkerPool       []sanface.WorkerFace
+	workerCur        int
+	Cache            sanface.CacheFace
+	WorkerListenChan chan int
 }
 
 func (s *ServerModel) AddMsgToMsgQueue(data sanface.WorkerTranDataFace) {
@@ -32,6 +33,8 @@ func (s *ServerModel) Start() {
 	for _, v := range s.WorkerPool {
 		go v.Start()
 	}
+	go s.WatchWorker()
+
 	fmt.Printf("SanDB Server:%s Version:%s 启动成功,开始监听:%s\n", s.Name, s.Version, s.Listen.Addr().String())
 	for {
 		conn, err := s.Listen.AcceptTCP()
@@ -94,6 +97,13 @@ func (s *ServerModel) GetSetManager(database string) (sanface.SetManagerFace, er
 	return dm, nil
 }
 
+func (s *ServerModel) WatchWorker() {
+	for {
+		wid := <-s.WorkerListenChan
+		go s.WorkerPool[wid].ReStart()
+	}
+}
+
 // ====================================String====================================
 
 func NewServerModel(name string, address string) sanface.Server {
@@ -108,20 +118,22 @@ func NewServerModel(name string, address string) sanface.Server {
 		return nil
 	}
 	wp := []sanface.WorkerFace{}
+	wlchan := make(chan int, conf.ConfigObj.WorkerPoolSize)
 	for i := 0; i < conf.ConfigObj.WorkerPoolSize; i++ {
-		wp = append(wp, NewWorkerModel(i))
+		wp = append(wp, NewWorkerModel(i, &wlchan))
 	}
 
 	return &ServerModel{
-		Name:           name,
-		Listen:         listen,
-		ConnNO:         0,
-		ConnNums:       0,
-		Version:        "SanDB_V1.4",
-		DataManagerMap: make(map[string]sanface.DataManagerFace),
-		SetManagerMap:  make(map[string]sanface.SetManagerFace),
-		WorkerPool:     wp,
-		workerCur:      0,
-		Cache:          NewCacheManagerModel(conf.ConfigObj.MaxCacheNums, conf.ConfigObj.CacheLength),
+		Name:             name,
+		Listen:           listen,
+		ConnNO:           0,
+		ConnNums:         0,
+		Version:          "SanDB_V1.6",
+		DataManagerMap:   make(map[string]sanface.DataManagerFace),
+		SetManagerMap:    make(map[string]sanface.SetManagerFace),
+		WorkerPool:       wp,
+		workerCur:        0,
+		Cache:            NewCacheManagerModel(conf.ConfigObj.MaxCacheNums, conf.ConfigObj.CacheLength),
+		WorkerListenChan: wlchan,
 	}
 }
